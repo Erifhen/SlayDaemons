@@ -22,7 +22,7 @@ export default function QuestCard({ quest, onToggle, onDelete, disabled }) {
 
         {reward && (
           <span className="quest-reward">
-            🎁 {reward.type === "xp" ? `+${reward.value} XP em ${reward.category}` : `+${reward.value} Saúde`}
+            🎁 {reward.type === "xp" ? `+${reward.value} XP em ${reward.category}` : `+${reward.value} pontos de Saúde/Descanso`}
           </span>
         )}
       </div>

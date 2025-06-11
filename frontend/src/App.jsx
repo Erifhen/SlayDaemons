@@ -33,7 +33,7 @@ function App() {
   useEffect(() => {
     const initializeApp = () => {
       initLocalStorage();
-      resetStorage();
+      //resetStorage();
       applyDecayNow();
 
       const userData = getData("userProfile");
