@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import defaultPic from '../assets/defaultpic.png';
 
-export default function StatusCard({ userProfile, onStaminaClick }) {
+export default function StatusCard({ userProfile, onSaveProfile }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editForm, setEditForm] = useState({
     nickName: userProfile?.profile?.nickName || '',
@@ -35,10 +35,12 @@ export default function StatusCard({ userProfile, onStaminaClick }) {
     });
   };
 
-  const handleSaveProfile = () => {
-
-    setIsEditing(false);
-  };
+const handleSaveProfile = () => {
+  if (typeof onSaveProfile === "function") {
+    onSaveProfile(editForm);
+  }
+  setIsEditing(false);
+};
 
   return (
     <div className="status-card">
@@ -123,7 +125,7 @@ export default function StatusCard({ userProfile, onStaminaClick }) {
               </div>
             </div>
 
-            <div className="bar-section-stamina" onClick={onStaminaClick}>
+            <div className="bar-section-stamina">
               <p>Estamina: {stamina.value} / {stamina.maxValue}</p>
               <div className="bar-stamina">
                 <div

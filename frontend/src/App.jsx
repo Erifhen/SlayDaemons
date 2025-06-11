@@ -7,7 +7,7 @@ import {
   getData,
   applyQuestReward,
   resetStorage,
-  addBoss
+  setData
 } from "./storage/LocalStorage";
 
 import StatusCard from "./components/StatusCard";
@@ -77,6 +77,19 @@ function App() {
     setUserProfile(getData("userProfile"));
   };
 
+  const handleSaveProfile = (updatedProfileData) => {
+  const updatedUserProfile = {
+    ...userProfile,
+    profile: {
+      ...userProfile.profile,
+      ...updatedProfileData,
+    }
+  };
+
+  setUserProfile(updatedUserProfile);
+  setData("userProfile", updatedUserProfile);
+};
+
   const onGainXP = (category, amount) => {
     updateXP(category, amount);
     refreshUserProfile();
@@ -95,7 +108,7 @@ function App() {
     <div className="app-design">
       <h1 className="main-title">Slay the Daemons</h1>
 
-      <StatusCard userProfile={userProfile} />
+      <StatusCard userProfile={userProfile} onSaveProfile={handleSaveProfile}/>
       <PowerStatusCard />
 
       <NavFeed activeFeed={activeFeed} setActiveFeed={setActiveFeed} />
