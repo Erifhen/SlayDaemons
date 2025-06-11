@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
     getData,
     toggleQuestCompletion,
@@ -18,7 +18,7 @@ export default function BossCard({ boss, refreshBossData }) {
     const [rewardCategory, setRewardCategory] = useState("physical");
     const [rewardValue, setRewardValue] = useState(5);
     const [isEditing, setIsEditing] = useState(false);
-    const [showAchievForm, setShowchievForm] = useState(false);
+    const [showAchievForm, setShowAchievForm] = useState(false);
     const [editForm, setEditForm] = useState({
         bossName: "",
         description: "",
@@ -40,15 +40,15 @@ export default function BossCard({ boss, refreshBossData }) {
         }
     }, [boss]);
 
+    const alreadyFinalized = useRef(false);
+
     useEffect(() => {
-        if (!boss.daily && boss.health?.value <= 0 && boss.active) {
-           const result = finalizeNormalBoss(boss.id);
-           if(result.success){
-            setShowchievForm(true);
-            refreshBossData
-           }
+        if (!boss.daily && boss.health?.value <= 0 && !alreadyFinalized.current) {
+            alreadyFinalized.current = true;
+            setShowAchievForm(true);
         }
-    }, [boss.health?.value, boss.active]);
+    }, [boss.health?.value]);
+
 
     if (!boss) return <div>Boss não encontrado.</div>;
 
@@ -103,7 +103,6 @@ export default function BossCard({ boss, refreshBossData }) {
             refreshBossData();
         }
     };
-
 
     return (
         <div className={`boss-card ${!isBossAlive ? "defeated" : "active"}`}>
@@ -163,7 +162,7 @@ export default function BossCard({ boss, refreshBossData }) {
                                 <div
                                     className="health-fill"
                                     style={{
-                                        width: `${(boss.health.value / boss.health.maxValue) * 10}%`,
+                                        width: `${(boss.health.value / boss.health.maxValue) * 100}%`,
                                     }}
                                 ></div>
                             </div>
@@ -235,19 +234,20 @@ export default function BossCard({ boss, refreshBossData }) {
                         )}
 
                         <button onClick={handleAddQuest}>Adicionar</button>
+                        {showAchievForm && boss && (
+                            <AchievementForm
+                                bossName={boss.bossName}
+                                onClose={() => {
+                                    finalizeNormalBoss(boss.id);
+                                    setShowAchievForm(false);
+                                    refreshBossData();
+                                }}
+                            />
+                        )}
 
                     </div>
                 </div>
             </div>
-            {showAchievForm && (
-                <AchievementForm onClose={(sucess) => {
-                    setAchievForm(false);
-                    if (sucess) {
-                        refreshBossData();
-                    }
-                }}
-                />
-            )}
         </div>
     );
 }

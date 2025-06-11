@@ -6,9 +6,10 @@ export default function ({ onClose }) {
     const getNextId = () => {
         const data = getData("userProfile");
         const lastAchievs = data?.achievements?.lastAchievs || [];
-        if (lastAchievs.lenght === 0) return 1;
+        if (lastAchievs.length === 0) return 1;
         return Math.max(...lastAchievs.map(a => a.id)) + 1;
     };
+
 
     const [achievement, setAchievement] = useState({
         id: getNextId(),
@@ -35,7 +36,7 @@ export default function ({ onClose }) {
             },
             lastAchievs: [
                 achievement,
-                ...achievement(data.achievements?.lastAchievs || [])
+                ...(data.achievements?.lastAchievs || [])
             ]
         };
 

@@ -160,7 +160,6 @@ export const recalculateBossHealth = (bossId) => {
     const quests = data.quests.filter(q => q.bossId === bossId);
     const completed = quests.filter(q => q.completed).length;
 
-    // Garante pelo menos 10 de vida máxima se não houver quests
     const maxValue = Math.max(10, quests.length * 10);
     const value = Math.max(0, maxValue - completed * 10);
 
@@ -182,12 +181,14 @@ export const recalculateBossHealth = (bossId) => {
 
 export const addQuestToBoss = (bossId, text, reward = { text: "", value: 10 }) => {
   const data = getData("bossBattles");
+  const lastId = data.quests.reduce((max, q) => Math.max(max, q.id), 0);
+  const newId = lastId + 1;
 
   const newQuest = {
-    id: Date.now(),
+    id: newId,
+    bossId,
     text,
     reward,
-    bossId,
     active: true,
     completed: false
   };
@@ -236,26 +237,33 @@ export function deleteBoss(bossId) {
   return true;
 }
 
-export function deleteQuest(questId) {
+export const deleteQuest = (questId) => {
   const data = getData("bossBattles");
-  if (!data || !data.quests) return;
 
-  const updatedQuests = data.quests.filter((quest) => quest.id !== questId);
-  const updatedData = {
-    ...data,
-    quests: updatedQuests,
-  };
+  const filteredQuests = data.quests.filter(q => q.id !== questId);
 
-  setData("bossBattles", updatedData);
-}
+  const renumberedQuests = filteredQuests.map((q, index) => ({
+    ...q,
+    id: index + 1
+  }));
+
+  setData("bossBattles", { ...data, quests: renumberedQuests });
+};
+
 
 export function addBoss(newBoss) {
     try {
         const data = getData("bossBattles") || { bosses: [], quests: [] };
-        
+
+        const getNextBossId = () => {
+            const validBosses = data.bosses.filter(b => typeof b.id === 'number');
+            if (validBosses.length === 0) return 1;
+            return Math.max(...validBosses.map(b => b.id)) + 1;
+        };
+
         const bossWithId = {
             ...newBoss,
-            id: Date.now().toString(),
+            id: getNextBossId(), 
             createdAt: new Date().toISOString(),
             health: { 
                 value: newBoss.daily ? 30 : 10,
@@ -273,6 +281,7 @@ export function addBoss(newBoss) {
         return null;
     }
 }
+
 
 export const updateBoss = (bossId, updates) => {
   const data = getData("bossBattles");
@@ -330,12 +339,11 @@ export const applyQuestReward = (quest) => {
 const gainXP = (statusPower, category, value) => {
   if (!statusPower[category]) {
     console.warn(`Categoria "${category}" não encontrada em statusPower`);
-    return statusPower; // ou lançar erro, dependendo do seu caso
+    return statusPower;
   }
 
   statusPower[category].xp += value;
 
-  // Aqui pode colocar a lógica de nivelamento, por exemplo:
   if (statusPower[category].xp >= 100) {
     statusPower[category].level += 1;
     statusPower[category].xp -= 100;
