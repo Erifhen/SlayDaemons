@@ -1,4 +1,4 @@
-export default function LastBattleCard({ battle }) {
+export default function LastBattleCard({ battle, onDelete }) {
     if (!battle) {
         return <div className="battle-error">Dados da batalha inválidos</div>;
     }
@@ -30,12 +30,25 @@ export default function LastBattleCard({ battle }) {
         }[battle.result] || battle.result;
     };
 
+    const handleDelete = () => {
+        if (window.confirm("Tem certeza que deseja excluir este registro de batalha?")) {
+            onDelete(battle.date); // Usamos a data como identificador único
+        }
+    };
+
     return (
         <div className="battle-card-box">
             <div className="battle-left">
                 <h2>Resultado: {getResultText()}</h2>
                 <p>Data: {formatDate(battle.date)}</p>
                 {battle.bossName && <p>Boss: {battle.bossName}</p>}
+                <button 
+                    className="delete-battle-btn"
+                    onClick={handleDelete}
+                    aria-label="Excluir batalha"
+                >
+                    ×
+                </button>
             </div>
             <div className="battle-right">
                 <div className="boss-pic-frame">

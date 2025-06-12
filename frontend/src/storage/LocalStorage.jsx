@@ -82,7 +82,7 @@ const decayStatusBar = (statusBar) => {
       lastDecay: now.toISOString(),
       health: {
         ...statusBar.health,
-        value: Math.max(0, statusBar.health.value - diffDays * 2)
+        value: Math.max(0, statusBar.health.value - diffDays * 5)
       },
       stamina: {
         ...statusBar.stamina,
@@ -156,27 +156,27 @@ export const applyDecayNow = () => {
 };
 
 export const recalculateBossHealth = (bossId) => {
-    const data = getData("bossBattles");
-    const quests = data.quests.filter(q => q.bossId === bossId);
-    const completed = quests.filter(q => q.completed).length;
+  const data = getData("bossBattles");
+  const quests = data.quests.filter(q => q.bossId === bossId);
+  const completed = quests.filter(q => q.completed).length;
 
-    const maxValue = Math.max(10, quests.length * 10);
-    const value = Math.max(0, maxValue - completed * 10);
+  const maxValue = Math.max(10, quests.length * 10);
+  const value = Math.max(0, maxValue - completed * 10);
 
-    const updatedBosses = data.bosses.map(boss => {
-        if (boss.id === bossId) {
-            return {
-                ...boss,
-                health: { value, maxValue },
-                active: value > 0
-            };
-        }
-        return boss;
-    });
+  const updatedBosses = data.bosses.map(boss => {
+    if (boss.id === bossId) {
+      return {
+        ...boss,
+        health: { value, maxValue },
+        active: value > 0
+      };
+    }
+    return boss;
+  });
 
-    setData("bossBattles", { ...data, bosses: updatedBosses });
-    
-    return { value, maxValue };
+  setData("bossBattles", { ...data, bosses: updatedBosses });
+
+  return { value, maxValue };
 };
 
 export const addQuestToBoss = (bossId, text, reward = { text: "", value: 10 }) => {
@@ -225,15 +225,15 @@ export function deleteBoss(bossId) {
   if (!data) return;
 
   const updatedBosses = data.bosses.filter(boss => boss.id !== bossId);
-  
+
   const updatedQuests = data.quests.filter(quest => quest.bossId !== bossId);
-  
+
   setData("bossBattles", {
     ...data,
     bosses: updatedBosses,
     quests: updatedQuests
   });
-  
+
   return true;
 }
 
@@ -252,34 +252,34 @@ export const deleteQuest = (questId) => {
 
 
 export function addBoss(newBoss) {
-    try {
-        const data = getData("bossBattles") || { bosses: [], quests: [] };
+  try {
+    const data = getData("bossBattles") || { bosses: [], quests: [] };
 
-        const getNextBossId = () => {
-            const validBosses = data.bosses.filter(b => typeof b.id === 'number');
-            if (validBosses.length === 0) return 1;
-            return Math.max(...validBosses.map(b => b.id)) + 1;
-        };
+    const getNextBossId = () => {
+      const validBosses = data.bosses.filter(b => typeof b.id === 'number');
+      if (validBosses.length === 0) return 1;
+      return Math.max(...validBosses.map(b => b.id)) + 1;
+    };
 
-        const bossWithId = {
-            ...newBoss,
-            id: getNextBossId(), 
-            createdAt: new Date().toISOString(),
-            health: { 
-                value: newBoss.daily ? 30 : 10,
-                maxValue: newBoss.daily ? 30 : 10 
-            },
-            active: true
-        };
+    const bossWithId = {
+      ...newBoss,
+      id: getNextBossId(),
+      createdAt: new Date().toISOString(),
+      health: {
+        value: newBoss.daily ? 30 : 10,
+        maxValue: newBoss.daily ? 30 : 10
+      },
+      active: true
+    };
 
-        data.bosses.push(bossWithId);
-        localStorage.setItem("bossBattles", JSON.stringify(data));
-        
-        return bossWithId;
-    } catch (error) {
-        console.error("Erro ao adicionar boss:", error);
-        return null;
-    }
+    data.bosses.push(bossWithId);
+    localStorage.setItem("bossBattles", JSON.stringify(data));
+
+    return bossWithId;
+  } catch (error) {
+    console.error("Erro ao adicionar boss:", error);
+    return null;
+  }
 }
 
 
@@ -316,6 +316,14 @@ export const applyQuestReward = (quest) => {
       console.warn(`Categoria inválida: ${category}`);
       return;
     }
+    const staminaPenalty = 5;
+    const healthPenalty = 2;
+    if (user.statusBar?.stamina?.value < staminaPenalty && user.statusBar?.health?.value < healthPenalty) {
+      console.warn("Estamina ou Saúde insuficiente, descanse e se alimente!");
+      return false;
+    }
+    user.statusBar.stamina.value = Math.max(user.statusBar.stamina.value - staminaPenalty, 0);
+    user.statusBar.health.value = Math.max(user.statusBar.health.value - healthPenalty, 0);
     user.statusPower = gainXP(user.statusPower, category, value);
   }
 
@@ -355,9 +363,9 @@ const gainXP = (statusPower, category, value) => {
 // Função para finalizar combate de boss diário
 export const finalizeDailyBosses = () => {
   const data = getData("bossBattles");
-  const historical = getData("historical") || { 
+  const historical = getData("historical") || {
     contabilization: { victories: 0, defeats: 0 },
-    lastBattles: [] 
+    lastBattles: []
   };
 
   const dailyBosses = data.bosses.filter(boss => boss.daily);
@@ -365,7 +373,7 @@ export const finalizeDailyBosses = () => {
   dailyBosses.forEach(boss => {
     const bossQuests = data.quests.filter(q => q.bossId === boss.id);
     const allCompleted = bossQuests.length > 0 && bossQuests.every(q => q.completed);
-    
+
     // Registra no histórico
     const result = {
       result: allCompleted ? "victory" : "defeat",
@@ -382,18 +390,18 @@ export const finalizeDailyBosses = () => {
     }
 
     const resetHealth = bossQuests.length * 10;
-    
-    data.bosses = data.bosses.map(b => 
-      b.id === boss.id 
-        ? { 
-            ...b, 
-            health: { value: resetHealth, maxValue: resetHealth },
-            active: true
-          } 
+
+    data.bosses = data.bosses.map(b =>
+      b.id === boss.id
+        ? {
+          ...b,
+          health: { value: resetHealth, maxValue: resetHealth },
+          active: true
+        }
         : b
     );
 
-    data.quests = data.quests.map(q => 
+    data.quests = data.quests.map(q =>
       q.bossId === boss.id
         ? { ...q, completed: false }
         : q
@@ -402,40 +410,62 @@ export const finalizeDailyBosses = () => {
 
   setData("bossBattles", data);
   setData("historical", historical);
-  
+
   return dailyBosses.length > 0;
 };
 
 // Função para finalizar boss normal
 export const finalizeNormalBoss = (bossId) => {
-    const data = getData("bossBattles");
-    const historical = getData("historical") || { 
-        contabilization: { victories: 0, defeats: 0 },
-        lastBattles: [] 
-    };
+  const data = getData("bossBattles");
+  const historical = getData("historical") || {
+    contabilization: { victories: 0, defeats: 0 },
+    lastBattles: []
+  };
 
-    const boss = data.bosses.find(b => b.id === bossId);
-    if (!boss || boss.daily || boss.health?.value > 0) {
-        return { success: false };
-    }
-    const result = {
-        result: "victory",
-        date: new Date().toISOString(),
-        bossPic: boss.bossPic,
-        bossName: boss.bossName
-    };
+  const boss = data.bosses.find(b => b.id === bossId);
+  if (!boss || boss.daily || boss.health?.value > 0) {
+    return { success: false };
+  }
+  const result = {
+    result: "victory",
+    date: new Date().toISOString(),
+    bossPic: boss.bossPic,
+    bossName: boss.bossName
+  };
 
-    historical.lastBattles.unshift(result);
-    historical.contabilization.victories += 1;
+  historical.lastBattles.unshift(result);
+  historical.contabilization.victories += 1;
 
-    const updatedData = {
-        ...data,
-        bosses: data.bosses.filter(b => b.id !== bossId),
-        quests: data.quests.filter(q => q.bossId !== bossId)
-    };
+  const updatedData = {
+    ...data,
+    bosses: data.bosses.filter(b => b.id !== bossId),
+    quests: data.quests.filter(q => q.bossId !== bossId)
+  };
 
-    setData("bossBattles", updatedData);
-    setData("historical", historical);
+  setData("bossBattles", updatedData);
+  setData("historical", historical);
+
+  return { success: true, boss };
+};
+
+export const removeBattleFromHistory = (battleDate) => {
+    const historical = getData("historical");
     
-    return { success: true, boss };
+    if (!historical || !historical.lastBattles) {
+        console.error("Histórico não encontrado ou inválido");
+        return false;
+    }
+
+    const initialLength = historical.lastBattles.length;
+    historical.lastBattles = historical.lastBattles.filter(
+        battle => battle.date !== battleDate
+    );
+
+    if (historical.lastBattles.length < initialLength) {
+        // Aqui você pode querer ajustar as contabilizações também
+        setData("historical", historical);
+        return true;
+    }
+
+    return false;
 };

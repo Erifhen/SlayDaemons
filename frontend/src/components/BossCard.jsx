@@ -11,7 +11,7 @@ import {
 import QuestCard from "./QuestCard";
 import AchievementForm from "./AchievementForm";
 
-export default function BossCard({ boss, refreshBossData }) {
+export default function BossCard({ boss, refreshBossData, refreshUserProfile, refreshHistorical, refreshAchievements }) {
     const [questsState, setQuestsState] = useState([]);
     const [newQuestText, setNewQuestText] = useState("");
     const [rewardType, setRewardType] = useState("xp");
@@ -57,6 +57,7 @@ export default function BossCard({ boss, refreshBossData }) {
     const handleToggleQuest = (questId) => {
         toggleQuestCompletion(questId);
         refreshBossData();
+        refreshUserProfile();
     };
 
     const handleDeleteQuest = (questId) => {
@@ -240,6 +241,8 @@ export default function BossCard({ boss, refreshBossData }) {
                                 onClose={() => {
                                     finalizeNormalBoss(boss.id);
                                     setShowAchievForm(false);
+                                    refreshHistorical();
+                                    refreshAchievements();
                                     refreshBossData();
                                 }}
                             />

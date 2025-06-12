@@ -7,7 +7,8 @@ import {
   getData,
   applyQuestReward,
   resetStorage,
-  setData
+  setData,
+  finalizeDailyBosses
 } from "./storage/LocalStorage";
 
 import StatusCard from "./components/StatusCard";
@@ -66,6 +67,7 @@ function App() {
         finalizeDailyBosses();
         refreshBossData();
         setHistorical(getData("historical"));
+        refreshHistorical();
       }
     };
 
@@ -77,18 +79,36 @@ function App() {
     setUserProfile(getData("userProfile"));
   };
 
-  const handleSaveProfile = (updatedProfileData) => {
-  const updatedUserProfile = {
-    ...userProfile,
-    profile: {
-      ...userProfile.profile,
-      ...updatedProfileData,
-    }
+  const refreshHistorical = () => {
+    const historicalData = getData("historical") || {
+      contabilization: { victories: 0, defeats: 0 },
+      lastBattles: [],
+    };
+    setHistorical(historicalData);
   };
 
-  setUserProfile(updatedUserProfile);
-  setData("userProfile", updatedUserProfile);
-};
+  const refreshAchievements = () => {
+    const data = getData("userProfile");
+    const achievementData = data?.achievements || {
+      contabilization: { achieves: 0 },
+      lastAchievs: [],
+    };
+    setAchievements(achievementData);
+  };
+
+
+  const handleSaveProfile = (updatedProfileData) => {
+    const updatedUserProfile = {
+      ...userProfile,
+      profile: {
+        ...userProfile.profile,
+        ...updatedProfileData,
+      }
+    };
+
+    setUserProfile(updatedUserProfile);
+    setData("userProfile", updatedUserProfile);
+  };
 
   const onGainXP = (category, amount) => {
     updateXP(category, amount);
@@ -108,17 +128,17 @@ function App() {
     <div className="app-design">
       <h1 className="main-title">Slay the Daemons</h1>
 
-      <StatusCard userProfile={userProfile} onSaveProfile={handleSaveProfile}/>
+      <StatusCard userProfile={userProfile} onSaveProfile={handleSaveProfile} />
       <PowerStatusCard />
 
       <NavFeed activeFeed={activeFeed} setActiveFeed={setActiveFeed} />
 
       <div className="feed-content">
         {activeFeed === "batalhas" && (
-          <BossArea bossData={bossData} refreshBossData={refreshBossData} />
+          <BossArea bossData={bossData} refreshBossData={refreshBossData} refreshUserProfile={refreshUserProfile} refreshHistorical={refreshHistorical} refreshAchievements={refreshAchievements} />
         )}
         {activeFeed === "historico" && historical && (
-          <HistoricalCard historicalData={historical} />
+          <HistoricalCard historicalData={historical} refreshHistorical={refreshHistorical} />
         )}
         {activeFeed === "conquistas" && achievements && (
           <AchievCard achievementData={achievements} />

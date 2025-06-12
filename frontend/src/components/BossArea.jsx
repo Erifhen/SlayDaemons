@@ -2,7 +2,7 @@ import BossCard from "./BossCard";
 import { useState } from "react";
 import { addBoss } from "../storage/LocalStorage";
 
-export default function BossArea({ bossData, refreshBossData }) {
+export default function BossArea({ bossData, refreshBossData, refreshUserProfile, refreshHistorical, refreshAchievements }) {
     const [isCreating, setIsCreating] = useState(false);
     const [newBoss, setNewBoss] = useState({
         bossName: "",
@@ -55,6 +55,9 @@ export default function BossArea({ bossData, refreshBossData }) {
                         key={`boss-${boss.id}`}
                         boss={boss}
                         refreshBossData={refreshBossData}
+                        refreshUserProfile={refreshUserProfile}
+                        refreshHistorical={refreshHistorical}
+                        refreshAchievements={refreshAchievements}
                     />
                 ))
             ) : (
@@ -100,7 +103,7 @@ export default function BossArea({ bossData, refreshBossData }) {
                     </div>
                 </div>
             ) : (
-                <button onClick={() => setIsCreating(true)}>Criar novo Daemon</button>
+                <button className="create-boss-btn" onClick={() => setIsCreating(true)}>Criar novo Daemon</button>
             )}
         </div>
     );
